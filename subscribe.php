@@ -5,7 +5,14 @@
 
     // Submit subscriber data to MailChimp
     // For parameters doc, refer to: http://apidocs.mailchimp.com/api/1.3/listsubscribe.func.php
-    $retval = $api->listSubscribe( 'c3ad951a26', $_POST["email"], '', 'html', false, true );
+    $retval = $api->listSubscribe( 
+    	'c3ad951a26', 
+    	$_POST["email"], 
+    	'', 
+    	'html', 
+    	false, 
+    	true 
+    	);
 
     if ($api->errorCode){
     } else {

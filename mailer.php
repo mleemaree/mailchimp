@@ -1,16 +1,16 @@
 <?php
 
+ // My modifications to mailer script from:
+    // http://blog.teamtreehouse.com/create-ajax-contact-form
+    // Added input sanitizing to prevent injection
     // Only process POST reqeusts.
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Get the form fields and remove whitespace.
         $name = strip_tags(trim($_POST["nom"]));
-				$name = str_replace(array("\r","\n"),array(" "," "),$name);
-        $city = strip_tags(trim($_POST["poblacio"]));
-        $tel = preg_replace('/[^0-9]/', '', $_POST['tel']);
+            $name = str_replace(array("\r","\n"),array(" "," "),$name);
         $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
         $message = trim($_POST["comentari"]);
- 
-         // Check that data was sent to the mailer.
+        // Check that data was sent to the mailer.
         if ( empty($name) OR empty($message) OR !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // Set a 400 (bad request) response code and exit.
             http_response_code(400);
@@ -30,9 +30,9 @@
         $email_headers = "From: $name <$email>";
         // Send the email.
         if (mail($recipient, $subject, $email_content, $email_headers)) {
-            mail($recipient, $subject, $email_content, $email_headers);
             // Set a 200 (okay) response code.
             http_response_code(200);
+            mail($recipient, $subject, $email_content, $email_headers);
         } else {
             // Set a 500 (internal server error) response code.
             http_response_code(500);
@@ -43,4 +43,8 @@
         http_response_code(403);
         echo "There was a problem with your submission, please try again.";
     }
+
+
+    
+
 ?>
