@@ -5,10 +5,15 @@
     // Added input sanitizing to prevent injection
     // Only process POST reqeusts.
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        require_once 'PHPMailer/PHPMailerAutoload.php';
+        require_once 'inc/MCAPI.class.php';
+        $api = new MCAPI('9be060065ba208a49d8695378aaa6bef-us12');
         // Get the form fields and remove whitespace.
         $name = strip_tags(trim($_POST["nom"]));
             $name = str_replace(array("\r","\n"),array(" "," "),$name);
+        $city = strip_tags(trim($_POST["poblacio"]));
         $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
+        $tel = preg_replace('/[^0-9]/', '', $_POST['tel']);
         $message = trim($_POST["comentari"]);
         // Check that data was sent to the mailer.
         if ( empty($name) OR empty($message) OR !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -28,11 +33,42 @@
         $email_content .= "Message:\n$message\n";
         // Build the email headers.
         $email_headers = "From: $name <$email>";
+
+        $mailer = mail($recipient, $subject, $email_content, $email_headers);
+
+        $retval = $api->listSubscribe( 
+        'c3ad951a26', 
+        $email, 
+        '', 
+        'html', 
+        false, 
+        true,
+        true 
+        );
+
         // Send the email.
-        if (mail($recipient, $subject, $email_content, $email_headers)) {
+        if ($mailer && $api->errorCode) {
             // Set a 200 (okay) response code.
             http_response_code(200);
-            mail($recipient, $subject, $email_content, $email_headers);
+            require_once 'PHPMailer/PHPMailerAutoload.php';
+            $mail = new PHPMailer;
+            //$mail->SMTPDebug = 3;                               // Enable verbose debug output
+
+            $mail->setFrom($email, 'Mailer');
+            $mail->addAddress('lee@mleemaree.com', 'Joe User');     // Add a recipient
+
+            $mail->Subject = "From: $name <$email>";
+            $mail->Body    = "Message:\n$message\n";
+            $mail->Body = "Poblaciò:\n$city\n";
+            $mail->Body = "Telefòn:\n$tel\n";
+            $mail->AltBody = "Message:\n$message\n";
+
+            if(!$mail->send()) {
+                echo 'Message could not be sent.';
+                echo 'Mailer Error: ' . $mail->ErrorInfo;
+            } else {
+                echo 'Message has been sent';
+            }
         } else {
             // Set a 500 (internal server error) response code.
             http_response_code(500);
